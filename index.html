@@ -3,68 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid QR Pro</title>
+    <title>Liquid Spotlight QR</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
         /* --- CSS Variables --- */
         :root {
-            /* Dark Mode Defaults (VisionOS Style) */
-            --bg-gradient: radial-gradient(circle at 50% 10%, #2c2c2e 0%, #000000 100%);
+            /* Dark Mode (Default) */
+            --bg-color: #000000;
             --glass-material: rgba(30, 30, 30, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-hover: rgba(255, 255, 255, 0.1);
             --text-primary: #ffffff;
             --text-secondary: #a1a1a6;
             --accent-color: #0a84ff;
+            --spotlight-color: rgba(10, 132, 255, 0.25); /* Blue glow */
             --button-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.3);
-            --input-bg: rgba(0, 0, 0, 0.3);
-            --orb-color: rgba(10, 132, 255, 0.15); /* Blue glow */
         }
 
         [data-theme="light"] {
-            /* Light Mode Defaults (Frosted Glass) */
-            --bg-gradient: radial-gradient(circle at 50% 0%, #eef2f5 0%, #dbe2e8 100%);
-            --glass-material: rgba(255, 255, 255, 0.65); /* More opaque for visibility */
-            --glass-border: rgba(255, 255, 255, 0.8);
-            --glass-highlight: rgba(255, 255, 255, 0.4);
+            /* Light Mode */
+            --bg-color: #f2f4f6;
+            --glass-material: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-hover: rgba(255, 255, 255, 0.8);
             --text-primary: #1d1d1f;
             --text-secondary: #515154;
             --accent-color: #0071e3;
-            --button-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0,0,0,0.05);
-            --input-bg: rgba(255, 255, 255, 0.5);
-            --orb-color: rgba(0, 113, 227, 0.08);
+            --spotlight-color: rgba(0, 113, 227, 0.15);
+            --button-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-            background: var(--bg-gradient);
+            background-color: var(--bg-color);
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            overflow-x: hidden;
-            transition: background 0.5s ease;
+            overflow: hidden; /* Prevent scroll bars from orb */
+            transition: background-color 0.5s ease;
+            cursor: default;
         }
 
-        /* --- Ambient Background Orb --- */
-        .ambient-orb {
+        /* --- Dynamic Spotlight Orb --- */
+        .spotlight-orb {
             position: fixed;
-            top: -20%;
-            left: -10%;
-            width: 80vw;
-            height: 80vw;
-            background: radial-gradient(circle, var(--orb-color) 0%, rgba(0,0,0,0) 70%);
-            filter: blur(60px);
+            top: 0; left: 0;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--spotlight-color) 0%, rgba(0,0,0,0) 70%);
+            filter: blur(80px);
             z-index: -1;
-            animation: floatOrb 10s ease-in-out infinite alternate;
-        }
-        @keyframes floatOrb {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(20px, 40px); }
+            pointer-events: none;
+            /* Centering the orb on the mouse coordinates */
+            transform: translate(calc(var(--mouse-x, 50vw) - 50%), calc(var(--mouse-y, 50vh) - 50%));
+            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); /* Lag for smooth feel */
+            will-change: transform;
         }
 
         /* --- Theme Toggle --- */
@@ -72,23 +70,21 @@
             position: absolute;
             top: 30px;
             right: 30px;
-            width: 48px;
-            height: 48px;
+            width: 44px; height: 44px;
             border-radius: 50%;
             border: 1px solid var(--glass-border);
             background: var(--glass-material);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             color: var(--text-primary);
             cursor: pointer;
             display: grid;
             place-items: center;
-            box-shadow: var(--button-shadow);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            z-index: 100;
+            transition: background 0.3s ease;
+            z-index: 50;
         }
-        .theme-toggle:hover { transform: scale(1.05); }
-        .theme-toggle svg { width: 22px; height: 22px; fill: currentColor; }
+        .theme-toggle:hover { background: var(--glass-hover); }
+        .theme-toggle svg { width: 20px; height: 20px; fill: currentColor; }
 
         /* --- Layout --- */
         .app-layout {
@@ -100,7 +96,6 @@
             width: 100%;
             max-width: 1100px;
             padding: 40px;
-            position: relative;
         }
 
         /* --- Left Panel --- */
@@ -109,6 +104,8 @@
             max-width: 480px;
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 10;
         }
 
         h1 {
@@ -125,35 +122,59 @@
             color: var(--text-secondary);
             font-size: 20px;
             margin-bottom: 40px;
-            line-height: 1.5;
-            font-weight: 400;
         }
 
-        /* --- Glass Inputs & Buttons --- */
-        .glass-panel {
+        /* --- Shared Glass Button/Input Styles --- */
+        .glass-element {
+            position: relative;
             background: var(--glass-material);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
+            border-radius: 18px;
             box-shadow: var(--button-shadow);
-            border-radius: 20px;
-            padding: 6px; /* Inner spacing for the input */
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            overflow: hidden;
+        }
+        
+        /* Spotlight Highlight Effect on Hover */
+        .glass-element::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(
+                600px circle at var(--mouse-x-rel) var(--mouse-y-rel), 
+                rgba(255, 255, 255, 0.15),
+                transparent 40%
+            );
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .glass-element:hover::after {
+            opacity: 1;
+        }
+        
+        /* Specific Styles */
+        .input-wrapper {
             margin-bottom: 24px;
-            transition: all 0.3s ease;
+            padding: 6px;
         }
 
         .input-wrapper input {
             width: 100%;
             background: transparent;
             border: none;
-            padding: 16px 20px;
+            padding: 16px 14px;
             font-size: 18px;
             color: var(--text-primary);
             outline: none;
+            position: relative;
+            z-index: 2; /* Above the highlight */
         }
-        .input-wrapper input::placeholder { color: var(--text-secondary); opacity: 0.7; }
 
-        /* Customization Row */
         .customize-row {
             display: flex;
             gap: 16px;
@@ -162,13 +183,7 @@
 
         .glass-btn {
             flex: 1;
-            position: relative;
-            background: var(--glass-material);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            height: 56px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -177,32 +192,14 @@
             color: var(--text-primary);
             font-weight: 500;
             font-size: 15px;
-            box-shadow: var(--button-shadow);
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            overflow: hidden;
         }
-
-        /* Inner highlight for "Liquid" feel */
-        .glass-btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 50%;
-            background: linear-gradient(to bottom, var(--glass-highlight), transparent);
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
+        
         .glass-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px -4px rgba(0,0,0,0.15);
-            border-color: var(--accent-color);
-            color: var(--accent-color);
+            border-color: var(--text-primary); /* Simple highlight without moving */
         }
 
-        /* Hidden Inputs */
-        .glass-btn input[type="color"], 
-        .glass-btn input[type="file"] {
-            position: absolute; opacity: 0; inset: 0; cursor: pointer;
+        .glass-btn input {
+            position: absolute; opacity: 0; inset: 0; cursor: pointer; z-index: 5;
         }
 
         .color-dot {
@@ -211,7 +208,6 @@
             background: black;
         }
 
-        /* Download Buttons */
         .download-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -219,29 +215,21 @@
             margin-bottom: 40px;
         }
 
-        /* Primary Action Buttons */
         .action-btn {
-            background: var(--glass-material); /* Glassy background */
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            color: var(--accent-color);
             padding: 16px;
-            border-radius: 16px;
+            color: var(--accent-color);
             font-weight: 600;
-            font-size: 15px;
             cursor: pointer;
-            box-shadow: var(--button-shadow);
-            transition: all 0.2s ease;
+            text-align: center;
         }
 
         .action-btn:hover {
             background: var(--accent-color);
-            color: white;
+            color: #fff;
             border-color: var(--accent-color);
-            transform: scale(1.02);
         }
 
-        /* --- Tips Grid --- */
+        /* --- Tips --- */
         .tips-wrapper {
             display: grid;
             grid-template-areas: "stack";
@@ -249,52 +237,54 @@
             border-top: 1px solid var(--glass-border);
             padding-top: 24px;
         }
-        
         .tip-item {
             grid-area: stack;
-            font-size: 15px;
             color: var(--text-secondary);
-            line-height: 1.5;
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.8s ease;
-            pointer-events: none;
         }
-        
         .tip-item.active { opacity: 1; transform: translateY(0); }
         .tip-item.exit { opacity: 0; transform: translateY(-10px); }
-        .tip-item strong { color: var(--text-primary); font-weight: 600; }
 
+        /* --- Right Panel: Animated Entrance --- */
+        .right-panel {
+            flex: 0 0 auto;
+            position: relative;
+            /* Initial State for Animation */
+            opacity: 0;
+            transform: translateY(60px);
+            animation: slideUpFade 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation-delay: 0.2s; /* Slight wait after page load */
+        }
 
-        /* --- Right Panel: Titanium iPhone Frame --- */
-        .right-panel { flex: 0 0 auto; position: relative; }
+        @keyframes slideUpFade {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         .titanium-frame {
             width: 310px;
             height: 620px;
-            /* Titanium Gradient */
             background: linear-gradient(135deg, #4a4a4a 0%, #2b2b2b 50%, #1a1a1a 100%);
             border-radius: 60px;
             padding: 12px;
-            position: relative;
             box-shadow: 
-                0 0 0 2px #555, /* Outer sheen */
-                0 50px 100px -20px rgba(0,0,0,0.5); /* Deep shadow */
-            transition: transform 0.5s ease;
+                0 0 0 2px #555,
+                0 50px 100px -20px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
         }
 
         [data-theme="light"] .titanium-frame {
-            /* Lighter Titanium for Light Mode */
             background: linear-gradient(135deg, #e1e1e1 0%, #d0d0d0 50%, #b8b8b8 100%);
-            box-shadow: 
-                0 0 0 2px #ffffff,
-                0 40px 80px -20px rgba(0,0,0,0.3);
+            box-shadow: 0 0 0 2px #fff, 0 40px 80px -20px rgba(0,0,0,0.3);
         }
 
         .screen-inner {
-            background: #ffffff;
-            width: 100%;
-            height: 100%;
+            background: #fff;
+            width: 100%; height: 100%;
             border-radius: 48px;
             overflow: hidden;
             display: flex;
@@ -302,24 +292,15 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            border: 6px solid #000; /* Bezel */
+            border: 6px solid #000;
         }
 
         .island-notch {
-            position: absolute;
-            top: 14px;
-            width: 100px;
-            height: 30px;
-            background: #000;
-            border-radius: 20px;
-            z-index: 10;
+            position: absolute; top: 14px; width: 100px; height: 30px;
+            background: #000; border-radius: 20px; z-index: 10;
         }
 
-        #qr-canvas {
-            opacity: 0;
-            transform: scale(0.9);
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+        #qr-canvas { opacity: 0; transform: scale(0.9); transition: all 0.5s ease; }
         #qr-canvas.show { opacity: 1; transform: scale(1); }
         
         .scan-text {
@@ -328,20 +309,17 @@
             text-transform: uppercase; letter-spacing: 1.5px;
         }
 
-        /* --- Mobile --- */
         @media (max-width: 950px) {
             .app-layout { flex-direction: column; gap: 40px; padding: 20px 0; }
-            .left-panel { order: 1; text-align: center; width: 100%; }
+            .left-panel { order: 1; width: 100%; text-align: center; }
             .right-panel { order: 2; }
             .customize-row { justify-content: center; }
-            h1 { font-size: 36px; }
-            .tips-wrapper { justify-items: center; text-align: center; }
         }
     </style>
 </head>
 <body data-theme="dark">
 
-    <div class="ambient-orb"></div>
+    <div class="spotlight-orb"></div>
 
     <button class="theme-toggle" onclick="toggleTheme()" aria-label="Switch Theme">
         <svg class="sun" viewBox="0 0 24 24" style="display:none"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
@@ -349,47 +327,40 @@
     </button>
 
     <div class="app-layout">
-        <!-- Left Controls -->
         <div class="left-panel">
-            <h1>Create. Link. <br>Liquid Style.</h1>
-            <p class="subtitle">The ultimate tool for generating premium QR codes.</p>
+            <h1>Create. Link. <br></h1>
+            <p class="subtitle">Secure QR Generation at your fingertips.</p>
 
-            <!-- Glass Input -->
-            <div class="glass-panel input-wrapper">
+            <div class="glass-element input-wrapper">
                 <input type="text" id="urlInput" placeholder="apple.com" autocomplete="off" autofocus>
             </div>
 
-            <!-- Customization -->
             <div class="customize-row">
-                <div class="glass-btn">
+                <div class="glass-element glass-btn">
                     <div class="color-dot" id="colorDot"></div>
                     <span>Color</span>
                     <input type="color" id="colorInput" value="#000000">
                 </div>
-                <div class="glass-btn">
+                <div class="glass-element glass-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
                     <span>Logo</span>
                     <input type="file" id="logoInput" accept="image/*">
                 </div>
             </div>
 
-            <!-- Download -->
             <div class="download-grid">
-                <button class="action-btn" onclick="downloadQR('png')">PNG</button>
-                <button class="action-btn" onclick="downloadQR('jpeg')">JPG</button>
-                <button class="action-btn" onclick="downloadQR('svg')">SVG</button>
+                <div class="glass-element action-btn" onclick="downloadQR('png')">PNG</div>
+                <div class="glass-element action-btn" onclick="downloadQR('jpeg')">JPG</div>
+                <div class="glass-element action-btn" onclick="downloadQR('svg')">SVG</div>
             </div>
 
-            <!-- Tips -->
             <div class="tips-wrapper">
-                <div class="tip-item active"><strong>Pro Tip:</strong> SVG format is infinitely scalable for print.</div>
-                <div class="tip-item"><strong>Liquid Design:</strong> Frosted glass helps focus attention on content.</div>
+                <div class="tip-item active"><strong>Pro Tip:</strong> Hover over buttons to see the liquid spotlight effect.</div>
+                <div class="tip-item"><strong>Animation:</strong> The phone preview slides in smoothly on load.</div>
                 <div class="tip-item"><strong>Branding:</strong> Add your logo to increase scan trust.</div>
-                <div class="tip-item"><strong>Dark Mode:</strong> Easier on the eyes for night-time work.</div>
             </div>
         </div>
 
-        <!-- Right Phone -->
         <div class="right-panel">
             <div class="titanium-frame">
                 <div class="screen-inner">
@@ -402,7 +373,27 @@
     </div>
 
     <script>
-        /* --- Logic --- */
+        /* --- Mouse Spotlight Logic --- */
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            
+            // 1. Move Global Orb
+            document.body.style.setProperty('--mouse-x', x + 'px');
+            document.body.style.setProperty('--mouse-y', y + 'px');
+
+            // 2. Update Button Highlights (Relative Position)
+            const glassElements = document.querySelectorAll('.glass-element');
+            glassElements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const relX = x - rect.left;
+                const relY = y - rect.top;
+                el.style.setProperty('--mouse-x-rel', relX + 'px');
+                el.style.setProperty('--mouse-y-rel', relY + 'px');
+            });
+        });
+
+        /* --- QR Logic --- */
         const qrCode = new QRCodeStyling({
             width: 200, height: 200, type: "svg",
             data: "https://apple.com",
@@ -414,18 +405,15 @@
 
         const canvas = document.getElementById("qr-canvas");
         qrCode.append(canvas);
-        setTimeout(() => canvas.classList.add('show'), 200);
+        setTimeout(() => canvas.classList.add('show'), 800); // Wait for phone slide-in
 
-        // Inputs
         document.getElementById("urlInput").addEventListener("input", (e) => {
             qrCode.update({ data: e.target.value || "https://apple.com" });
         });
-
         document.getElementById("colorInput").addEventListener("input", (e) => {
             document.getElementById("colorDot").style.backgroundColor = e.target.value;
             qrCode.update({ dotsOptions: { color: e.target.value } });
         });
-
         document.getElementById("logoInput").addEventListener("change", (e) => {
             const file = e.target.files[0];
             if(file) {
@@ -439,7 +427,7 @@
             qrCode.download({ name: "qr-code", extension: fmt });
         }
 
-        // Tips Loop
+        /* --- Tips Loop --- */
         const tips = document.querySelectorAll('.tip-item');
         let tIdx = 0;
         setInterval(() => {
@@ -452,11 +440,10 @@
             }, 800);
         }, 5000);
 
-        // Theme Toggle
+        /* --- Theme Toggle --- */
         const body = document.body;
         const sun = document.querySelector('.sun');
         const moon = document.querySelector('.moon');
-        
         function toggleTheme() {
             const isLight = body.getAttribute('data-theme') === 'light';
             body.setAttribute('data-theme', isLight ? 'dark' : 'light');
