@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Liquid Spotlight QR</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
@@ -44,14 +44,16 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            overflow: hidden; /* Prevent scroll bars from orb */
+            /* FIX: Only hide horizontal overflow to allow vertical scrolling */
+            overflow-x: hidden; 
+            overflow-y: auto;
             transition: background-color 0.5s ease;
             cursor: default;
         }
 
         /* --- Dynamic Spotlight Orb --- */
         .spotlight-orb {
-            position: fixed;
+            position: fixed; /* Fixed so it doesn't affect document flow */
             top: 0; left: 0;
             width: 600px;
             height: 600px;
@@ -61,7 +63,7 @@
             pointer-events: none;
             /* Centering the orb on the mouse coordinates */
             transform: translate(calc(var(--mouse-x, 50vw) - 50%), calc(var(--mouse-y, 50vh) - 50%));
-            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); /* Lag for smooth feel */
+            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
             will-change: transform;
         }
 
@@ -153,8 +155,11 @@
             pointer-events: none;
         }
         
-        .glass-element:hover::after {
-            opacity: 1;
+        /* Only show spotlight hover on non-touch devices */
+        @media (hover: hover) {
+            .glass-element:hover::after {
+                opacity: 1;
+            }
         }
         
         /* Specific Styles */
@@ -195,7 +200,7 @@
         }
         
         .glass-btn:hover {
-            border-color: var(--text-primary); /* Simple highlight without moving */
+            border-color: var(--text-primary);
         }
 
         .glass-btn input {
@@ -309,11 +314,22 @@
             text-transform: uppercase; letter-spacing: 1.5px;
         }
 
+        /* --- Mobile Responsive Fixes --- */
         @media (max-width: 950px) {
-            .app-layout { flex-direction: column; gap: 40px; padding: 20px 0; }
+            .app-layout { 
+                flex-direction: column; 
+                gap: 40px; 
+                padding: 60px 0; /* Add top padding to clear the theme toggle */
+            }
             .left-panel { order: 1; width: 100%; text-align: center; }
-            .right-panel { order: 2; }
+            .right-panel { order: 2; margin-bottom: 40px; }
             .customize-row { justify-content: center; }
+            
+            /* Ensure toggle doesn't overlap on small screens */
+            .theme-toggle {
+                top: 20px;
+                right: 20px;
+            }
         }
     </style>
 </head>
@@ -328,8 +344,8 @@
 
     <div class="app-layout">
         <div class="left-panel">
-            <h1>Create. Link. <br></h1>
-            <p class="subtitle">Secure QR Generation at your fingertips.</p>
+            <h1>Create. Link. <br>Liquid Style.</h1>
+            <p class="subtitle">Premium glass aesthetics with intelligent spotlight tracking.</p>
 
             <div class="glass-element input-wrapper">
                 <input type="text" id="urlInput" placeholder="apple.com" autocomplete="off" autofocus>
