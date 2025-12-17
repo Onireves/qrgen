@@ -3,251 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Generator</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <title>Ultimate QR Generator</title>
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
-        /* Custom smooth scroll and selection color */
-        ::selection {
-            background-color: rgba(59, 130, 246, 0.3);
+        :root {
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent: #0071e3;
+            --accent-hover: #0077ed;
+            --phone-border: #2b2b2b;
+            --phone-frame: #464646;
+            --transition: cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --card-bg: #1c1c1e;
+                --text-primary: #f5f5f7;
+                --text-secondary: #a1a1a6;
+                --phone-border: #181818;
+                --phone-frame: #2c2c2e;
+            }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background-color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center; /* Vertically center */
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* --- Main Layout: Flexbox Row (Desktop) vs Column (Mobile) --- */
+        .app-layout {
+            display: flex;
+            flex-direction: row; /* Default: Side by Side for Desktop */
+            align-items: center;
+            justify-content: center;
+            gap: 80px;
+            width: 100%;
+            max-width: 1100px;
+            padding: 40px;
+        }
+
+        /* --- Left Side: Controls & Info --- */
+        .left-panel {
+            flex: 1;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: left;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            line-height: 1.1;
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 21px;
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 40px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 20px 22px;
+            font-size: 18px;
+            border: none;
+            border-radius: 18px;
+            background: var(--card-bg);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            color: var(--text-primary);
+            outline: none;
+            transition: box-shadow 0.2s ease;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.2);
+        }
+
+        .download-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        button {
+            background: var(--card-bg);
+            color: var(--accent);
+            border: none;
+            padding: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            background: var(--accent);
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        /* Hide the canvas used for generation */
-        #qr-canvas {
-            display: none;
+        
+        button:active { transform: scale(0.97); }
+
+        /* --- Tips Animation Section --- */
+        .tips-container {
+            height: 60px; /* Fixed height to prevent layout shift */
+            position: relative;
+            overflow: hidden;
+            border-top: 1px solid rgba(134, 134, 139, 0.2);
+            padding-top: 20px;
         }
-        /* Smooth fade-in animation */
-        .fade-in {
-            animation: fadeIn 0.7s ease-out forwards;
+
+        .tip {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            font-size: 14px;
+            color: var(--text-secondary);
             opacity: 0;
-            transform: scale(0.95);
+            transform: translateY(10px);
+            transition: all 0.8s var(--transition);
         }
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: scale(1);
+
+        .tip.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .tip.exit {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .tip strong { color: var(--text-primary); font-weight: 600; }
+
+
+        /* --- Right Side: iPhone Mockup --- */
+        .right-panel {
+            flex: 0 0 auto; /* Do not shrink */
+        }
+
+        .iphone-frame {
+            width: 300px;
+            height: 610px;
+            background: #000;
+            border-radius: 54px;
+            position: relative;
+            box-shadow: 
+                0 0 0 4px #323232, 
+                0 30px 80px -20px rgba(0,0,0,0.4);
+            padding: 14px;
+            user-select: none;
+            transition: transform 0.5s var(--transition);
+        }
+
+        /* Screen Inner */
+        .screen {
+            background: #fff;
+            width: 100%;
+            height: 100%;
+            border-radius: 42px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notch {
+            position: absolute;
+            top: 22px;
+            width: 96px;
+            height: 30px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 10;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .screen-ui-top {
+            position: absolute;
+            top: 80px;
+            color: #1d1d1f;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            opacity: 0.4;
+        }
+
+        #canvas-container {
+            width: 220px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s var(--transition);
+        }
+
+        #canvas-container.visible { opacity: 1; transform: scale(1); }
+        #canvas-container canvas { max-width: 100%; border-radius: 16px; }
+
+        .screen-ui-bottom {
+            position: absolute;
+            bottom: 30px;
+            width: 35%;
+            height: 5px;
+            background: #000;
+            border-radius: 10px;
+            opacity: 0.2;
+        }
+
+
+        /* --- Mobile Responsive Breakpoint --- */
+        @media (max-width: 900px) {
+            .app-layout {
+                flex-direction: column; /* Stack vertically */
+                gap: 50px;
+                padding: 20px 0;
+            }
+
+            .left-panel {
+                max-width: 100%;
+                text-align: center;
+                order: 1; /* Input First */
+            }
+
+            .right-panel {
+                order: 2; /* Phone Second */
+            }
+
+            h1 { font-size: 32px; }
+            p.subtitle { font-size: 17px; margin-bottom: 30px; }
+            
+            .tips-container { 
+                text-align: center;
+                height: auto; 
+                min-height: 50px;
             }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6">
+<body>
 
-    <!-- Main Container -->
-    <div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center fade-in">
+    <div class="app-layout">
         
-        <!-- Left Column: Controls -->
-        <div class="space-y-8 order-2 lg:order-1">
-            <div class="space-y-2">
-                <h1 class="text-4xl md:text-5xl font-semibold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white to-neutral-500">
-                    QR Generator
-                </h1>
-                <p class="text-neutral-400 text-lg font-medium">
-                    Create, customize, and share.
-                </p>
+        <!-- Left Panel: Inputs & Info -->
+        <div class="left-panel">
+            <h1>Create. Share.<br>Instantly.</h1>
+            <p class="subtitle">Generate sleek, scannable codes for your business or personal use.</p>
+
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="urlInput" 
+                    placeholder="apple.com" 
+                    autocomplete="off"
+                    autofocus
+                >
             </div>
 
-            <div class="space-y-6">
-                <!-- Input Group -->
-                <div class="group relative">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i data-lucide="link" class="h-5 w-5 text-neutral-500 group-focus-within:text-blue-500 transition-colors"></i>
-                    </div>
-                    <input
-                        type="text"
-                        id="url-input"
-                        value="https://www.apple.com"
-                        placeholder="https://example.com"
-                        class="block w-full pl-12 pr-12 py-4 bg-[#1c1c1e] border border-[#2c2c2e] rounded-2xl text-lg placeholder-neutral-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all duration-300 shadow-lg"
-                    />
-                    <div class="absolute inset-y-0 right-2 flex items-center">
-                        <button 
-                            onclick="copyToClipboard()"
-                            class="p-2 hover:bg-white/10 rounded-lg transition-colors text-neutral-500 hover:text-white"
-                            title="Copy URL"
-                        >
-                            <i id="copy-icon" data-lucide="copy" class="h-5 w-5"></i>
-                        </button>
-                    </div>
-                </div>
+            <div class="download-options">
+                <button onclick="downloadQR('png')">PNG</button>
+                <button onclick="downloadQR('jpeg')">JPG</button>
+                <button onclick="downloadQR('svg')">SVG</button>
+            </div>
 
-                <!-- Format Selection -->
-                <div class="space-y-4 pt-4">
-                    <h3 class="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Download Options</h3>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <button onclick="downloadQR('png')" class="flex items-center justify-center gap-2 py-3 px-4 bg-[#1c1c1e] hover:bg-[#2c2c2e] active:scale-95 border border-[#2c2c2e] rounded-xl text-white font-medium transition-all duration-200 group">
-                            <i data-lucide="file-image" class="w-4 h-4 text-blue-400 group-hover:text-blue-300"></i>
-                            <span>PNG</span>
-                        </button>
-                        
-                        <button onclick="downloadQR('jpeg')" class="flex items-center justify-center gap-2 py-3 px-4 bg-[#1c1c1e] hover:bg-[#2c2c2e] active:scale-95 border border-[#2c2c2e] rounded-xl text-white font-medium transition-all duration-200 group">
-                            <i data-lucide="file-image" class="w-4 h-4 text-purple-400 group-hover:text-purple-300"></i>
-                            <span>JPG</span>
-                        </button>
-                        
-                        <button onclick="downloadQR('svg')" class="flex items-center justify-center gap-2 py-3 px-4 bg-[#1c1c1e] hover:bg-[#2c2c2e] active:scale-95 border border-[#2c2c2e] rounded-xl text-white font-medium transition-all duration-200 group">
-                            <i data-lucide="file-code" class="w-4 h-4 text-green-400 group-hover:text-green-300"></i>
-                            <span>SVG</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <p class="text-xs text-neutral-600 pt-4">
-                    High resolution output optimized for print and digital use.
-                </p>
+            <!-- Fading Tips Section -->
+            <div class="tips-container">
+                <div class="tip active"><strong>Pro Tip:</strong> Use SVG format for large print materials like posters.</div>
+                <div class="tip"><strong>Use Case:</strong> Share your Wi-Fi password without typing it out.</div>
+                <div class="tip"><strong>Did you know?</strong> Rounded dots are easier for some cameras to scan quickly.</div>
+                <div class="tip"><strong>Use Case:</strong> Link directly to your restaurant menu PDF.</div>
             </div>
         </div>
 
-        <!-- Right Column: Preview -->
-        <div class="flex flex-col items-center justify-center order-1 lg:order-2">
-            <div class="relative group">
-                <!-- Glow effect -->
-                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                
-                <div class="relative bg-white p-8 md:p-12 rounded-[2rem] shadow-2xl flex items-center justify-center overflow-hidden">
-                    <!-- The hidden canvas for generation -->
-                    <canvas id="qr-canvas"></canvas>
+        <!-- Right Panel: iPhone Mockup -->
+        <div class="right-panel">
+            <div class="iphone-frame">
+                <div class="screen">
+                    <div class="notch"></div>
+                    <div class="screen-ui-top">Scan to Open</div>
                     
-                    <!-- The visible image for preview -->
-                    <div class="w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
-                        <img id="qr-preview" alt="QR Code" class="w-full h-full object-contain mix-blend-multiply" />
-                        <div id="empty-state" class="hidden text-neutral-300 text-center">
-                            <div class="mb-2 mx-auto w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
-                                <i data-lucide="link" class="text-neutral-300"></i>
-                            </div>
-                            <span class="text-sm font-medium">Enter a URL</span>
-                        </div>
-                    </div>
+                    <div id="canvas-container"></div>
                     
-                    <!-- Corner Accents -->
-                    <div class="absolute top-6 left-6 w-8 h-8 border-l-2 border-t-2 border-neutral-900/10 rounded-tl-xl"></div>
-                    <div class="absolute top-6 right-6 w-8 h-8 border-r-2 border-t-2 border-neutral-900/10 rounded-tr-xl"></div>
-                    <div class="absolute bottom-6 left-6 w-8 h-8 border-l-2 border-b-2 border-neutral-900/10 rounded-bl-xl"></div>
-                    <div class="absolute bottom-6 right-6 w-8 h-8 border-r-2 border-b-2 border-neutral-900/10 rounded-br-xl"></div>
+                    <div class="screen-ui-bottom"></div>
                 </div>
             </div>
-            
-            <div class="mt-8 flex gap-2 text-neutral-500 text-sm font-medium">
-                <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1c1c1e] border border-[#2c2c2e]">
-                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    Ready to export
-                </span>
-            </div>
         </div>
+
     </div>
 
     <script>
-        // Initialize Icons
-        lucide.createIcons();
+        /* --- QR Generation Logic --- */
+        const qrCode = new QRCodeStyling({
+            width: 220,
+            height: 220,
+            type: "svg",
+            data: "https://apple.com",
+            image: "",
+            dotsOptions: { color: "#000000", type: "rounded" },
+            backgroundOptions: { color: "#ffffff" },
+            cornersSquareOptions: { type: "extra-rounded" }
+        });
 
-        const canvas = document.getElementById('qr-canvas');
-        const input = document.getElementById('url-input');
-        const previewImg = document.getElementById('qr-preview');
-        const emptyState = document.getElementById('empty-state');
-        const copyIcon = document.getElementById('copy-icon');
+        const container = document.getElementById("canvas-container");
+        qrCode.append(container);
+        setTimeout(() => container.classList.add('visible'), 100);
 
-        const QR_SIZE = 1024; // High res for download
-
-        // Generate Function
-        function generateQR() {
-            const url = input.value;
-            
-            if (!url) {
-                previewImg.style.display = 'none';
-                emptyState.classList.remove('hidden');
-                return;
+        const input = document.getElementById("urlInput");
+        input.addEventListener("input", (e) => {
+            const url = e.target.value.trim();
+            if (url.length > 0) {
+                qrCode.update({ data: url });
+                container.classList.add('visible');
             }
+        });
 
-            emptyState.classList.add('hidden');
-            previewImg.style.display = 'block';
-
-            QRCode.toCanvas(canvas, url, {
-                width: QR_SIZE,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                },
-                errorCorrectionLevel: 'H'
-            }, function (error) {
-                if (error) console.error(error);
-                // Update preview image
-                previewImg.src = canvas.toDataURL();
-            });
-        }
-
-        // Event Listeners
-        input.addEventListener('input', generateQR);
-
-        // Download Function
         function downloadQR(format) {
-            const url = input.value;
-            if (!url) return;
-
-            if (format === 'svg') {
-                QRCode.toString(url, {
-                    type: 'svg',
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                }, (err, string) => {
-                    if (err) return;
-                    const blob = new Blob([string], { type: 'image/svg+xml' });
-                    const downloadUrl = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = downloadUrl;
-                    link.download = `qrcode-${Date.now()}.svg`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(downloadUrl);
-                });
-            } else {
-                // PNG or JPG
-                const image = canvas.toDataURL(`image/${format}`);
-                const link = document.createElement('a');
-                link.href = image;
-                link.download = `qrcode-${Date.now()}.${format}`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            const inputValue = input.value.trim() || "qr-code";
+            const filename = inputValue.replace(/[^a-z0-9]/gi, '_').substring(0, 15);
+            qrCode.download({ name: filename || "qr-code", extension: format });
         }
 
-        // Copy Clipboard Function
-        function copyToClipboard() {
-            const url = input.value;
-            if(!url) return;
-            
-            navigator.clipboard.writeText(url).then(() => {
-                // Change icon to check
-                copyIcon.setAttribute('data-lucide', 'check');
-                copyIcon.classList.add('text-green-500');
-                lucide.createIcons(); // Refresh icons to show check
+        /* --- Tips Fade Animation Logic --- */
+        const tips = document.querySelectorAll('.tip');
+        let currentTip = 0;
 
-                // Revert after 2s
-                setTimeout(() => {
-                    copyIcon.setAttribute('data-lucide', 'copy');
-                    copyIcon.classList.remove('text-green-500');
-                    lucide.createIcons(); // Refresh icons to show copy
-                }, 2000);
-            });
-        }
+        setInterval(() => {
+            // Fade out current
+            tips[currentTip].classList.remove('active');
+            tips[currentTip].classList.add('exit');
 
-        // Initial Generation
-        window.onload = function() {
-            generateQR();
-        }
+            // Wait for exit transition, then reset position and fade in next
+            setTimeout(() => {
+                tips[currentTip].classList.remove('exit'); // Reset position invisibly
+                
+                currentTip = (currentTip + 1) % tips.length;
+                
+                tips[currentTip].classList.add('active');
+            }, 800); // Wait for the 0.8s transition to finish
+
+        }, 4000); // Change every 4 seconds
     </script>
 </body>
 </html>
