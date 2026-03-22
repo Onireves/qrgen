@@ -6,6 +6,7 @@
     <title>Liquid Spotlight QR</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <style>
         /* --- CSS Variables --- */
         :root {
@@ -621,8 +622,11 @@
                 <div class="glass-element upload-zone" id="upload-scanner" style="display:none;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     <span>Drop an image or click to upload</span>
-                    <input type="file" id="scanFileInput" accept="image/*">
+                    <input type="file" id="scanFileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif,image/*">
                 </div>
+
+                <!-- Hidden element for file scanning -->
+                <div id="file-scan-reader" style="display:none;"></div>
 
                 <!-- Scan Result -->
                 <div class="glass-element scan-result" id="scanResult">
@@ -842,21 +846,45 @@
         }
 
         /* --- Image Upload Scanning --- */
-        document.getElementById('scanFileInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        function scanImageFile(file) {
+            const fileScanReader = document.getElementById('file-scan-reader');
+            // Reset the hidden element
+            fileScanReader.innerHTML = '';
 
-            const scanQr = new Html5Qrcode("upload-scanner");
-            scanQr.scanFile(file, true)
+            const scanQr = new Html5Qrcode("file-scan-reader");
+            scanQr.scanFile(file, false)
                 .then(decodedText => {
                     showScanResult(decodedText);
                     scanQr.clear();
                 })
-                .catch(err => {
+                .catch(() => {
                     showScanResult('No barcode or QR code found in image.');
                     document.getElementById('openLinkBtn').style.display = 'none';
-                    scanQr.clear();
+                    try { scanQr.clear(); } catch(e) {}
                 });
+        }
+
+        document.getElementById('scanFileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const name = file.name.toLowerCase();
+            const isHeic = name.endsWith('.heic') || name.endsWith('.heif') || file.type === 'image/heic' || file.type === 'image/heif';
+
+            if (isHeic && typeof heic2any !== 'undefined') {
+                // Convert HEIC/HEIF to PNG before scanning
+                heic2any({ blob: file, toType: 'image/png' })
+                    .then(pngBlob => {
+                        const converted = new File([pngBlob], 'converted.png', { type: 'image/png' });
+                        scanImageFile(converted);
+                    })
+                    .catch(() => {
+                        showScanResult('Could not process HEIC image. Try converting to PNG first.');
+                        document.getElementById('openLinkBtn').style.display = 'none';
+                    });
+            } else {
+                scanImageFile(file);
+            }
 
             // Reset file input so same file can be re-uploaded
             e.target.value = '';
