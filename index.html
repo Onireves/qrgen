@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Liquid Spotlight QR</title>
     <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         /* --- CSS Variables --- */
         :root {
@@ -314,6 +315,214 @@
             text-transform: uppercase; letter-spacing: 1.5px;
         }
 
+        /* --- Tab Navigation --- */
+        .tab-nav {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 32px;
+            background: var(--glass-material);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(10, 132, 255, 0.3);
+        }
+
+        .tab-btn:not(.active):hover {
+            color: var(--text-primary);
+            background: var(--glass-hover);
+        }
+
+        .tab-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* --- Scanner Styles --- */
+        .scan-mode-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .scan-mode-btn {
+            flex: 1;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 15px;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .scan-mode-btn.active {
+            color: var(--accent-color);
+            border-color: var(--accent-color) !important;
+        }
+
+        .scan-mode-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .scanner-viewport {
+            position: relative;
+            margin-bottom: 24px;
+            border-radius: 18px;
+            overflow: hidden;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scanner-viewport #scanner-reader {
+            width: 100%;
+        }
+
+        .scanner-viewport #scanner-reader video {
+            border-radius: 12px !important;
+        }
+
+        /* Hide default html5-qrcode UI chrome */
+        #scanner-reader img[alt="Info icon"],
+        #scanner-reader__dashboard_section_csr span,
+        #scanner-reader__header_message,
+        #scanner-reader__dashboard {
+            display: none !important;
+        }
+
+        .upload-zone {
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-color);
+        }
+
+        .upload-zone svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.5;
+        }
+
+        .upload-zone input {
+            position: absolute;
+            opacity: 0;
+            inset: 0;
+            cursor: pointer;
+            z-index: 5;
+        }
+
+        .scan-result {
+            padding: 6px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .scan-result.has-result {
+            display: block;
+        }
+
+        .scan-result-inner {
+            padding: 16px 14px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .scan-result-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .scan-result-text {
+            font-size: 16px;
+            color: var(--text-primary);
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .scan-result-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .result-action-btn {
+            padding: 8px 16px;
+            border: none;
+            background: var(--accent-color);
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .result-action-btn:hover {
+            opacity: 0.85;
+        }
+
+        .result-action-btn.secondary {
+            background: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--glass-border);
+        }
+
         /* --- Mobile Responsive Fixes --- */
         @media (max-width: 950px) {
             .app-layout { 
@@ -347,33 +556,85 @@
             <h1>Create. Link. <br></h1>
             <p class="subtitle">Secure QR Code Generation. All done locally.</p>
 
-            <div class="glass-element input-wrapper">
-                <input type="text" id="urlInput" placeholder="apple.com" autocomplete="off" autofocus>
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="generate" onclick="switchTab('generate')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Generate
+                </button>
+                <button class="tab-btn" data-tab="scan" onclick="switchTab('scan')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+                    Scan
+                </button>
             </div>
 
-            <div class="customize-row">
-                <div class="glass-element glass-btn">
-                    <div class="color-dot" id="colorDot"></div>
-                    <span>Color</span>
-                    <input type="color" id="colorInput" value="#000000">
+            <!-- Generate Tab -->
+            <div class="tab-content active" id="tab-generate">
+                <div class="glass-element input-wrapper">
+                    <input type="text" id="urlInput" placeholder="apple.com" autocomplete="off" autofocus>
                 </div>
-                <div class="glass-element glass-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-                    <span>Logo</span>
-                    <input type="file" id="logoInput" accept="image/*">
+
+                <div class="customize-row">
+                    <div class="glass-element glass-btn">
+                        <div class="color-dot" id="colorDot"></div>
+                        <span>Color</span>
+                        <input type="color" id="colorInput" value="#000000">
+                    </div>
+                    <div class="glass-element glass-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        <span>Logo</span>
+                        <input type="file" id="logoInput" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="download-grid">
+                    <div class="glass-element action-btn" onclick="downloadQR('png')">PNG</div>
+                    <div class="glass-element action-btn" onclick="downloadQR('jpeg')">JPG</div>
+                    <div class="glass-element action-btn" onclick="downloadQR('svg')">SVG</div>
+                </div>
+
+                <div class="tips-wrapper">
+                    <div class="tip-item active"><strong>Pro Tip:</strong> Hover over buttons to see the liquid spotlight effect.</div>
+                    <div class="tip-item"><strong>Animation:</strong> The phone preview slides in smoothly on load.</div>
+                    <div class="tip-item"><strong>Branding:</strong> Add your logo to increase scan trust.</div>
                 </div>
             </div>
 
-            <div class="download-grid">
-                <div class="glass-element action-btn" onclick="downloadQR('png')">PNG</div>
-                <div class="glass-element action-btn" onclick="downloadQR('jpeg')">JPG</div>
-                <div class="glass-element action-btn" onclick="downloadQR('svg')">SVG</div>
-            </div>
+            <!-- Scan Tab -->
+            <div class="tab-content" id="tab-scan">
+                <div class="scan-mode-row">
+                    <div class="glass-element glass-btn scan-mode-btn active" data-mode="camera" onclick="switchScanMode('camera')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        Camera
+                    </div>
+                    <div class="glass-element glass-btn scan-mode-btn" data-mode="upload" onclick="switchScanMode('upload')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        Upload
+                    </div>
+                </div>
 
-            <div class="tips-wrapper">
-                <div class="tip-item active"><strong>Pro Tip:</strong> Hover over buttons to see the liquid spotlight effect.</div>
-                <div class="tip-item"><strong>Animation:</strong> The phone preview slides in smoothly on load.</div>
-                <div class="tip-item"><strong>Branding:</strong> Add your logo to increase scan trust.</div>
+                <!-- Camera Scanner -->
+                <div class="glass-element scanner-viewport" id="camera-scanner">
+                    <div id="scanner-reader"></div>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="glass-element upload-zone" id="upload-scanner" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Drop an image or click to upload</span>
+                    <input type="file" id="scanFileInput" accept="image/*">
+                </div>
+
+                <!-- Scan Result -->
+                <div class="glass-element scan-result" id="scanResult">
+                    <div class="scan-result-inner">
+                        <div class="scan-result-label">Result</div>
+                        <div class="scan-result-text" id="scanResultText"></div>
+                        <div class="scan-result-actions">
+                            <button class="result-action-btn" onclick="copyScanResult()">Copy</button>
+                            <button class="result-action-btn secondary" id="openLinkBtn" onclick="openScanResult()" style="display:none;">Open Link</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -466,6 +727,140 @@
             sun.style.display = isLight ? 'none' : 'block';
             moon.style.display = isLight ? 'block' : 'none';
         }
+
+        /* --- Tab Switching --- */
+        let html5QrCode = null;
+        let scannerActive = false;
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            if (tab === 'scan') {
+                // Small delay to ensure DOM is visible before starting camera
+                setTimeout(() => startCameraScanner(), 300);
+            } else {
+                stopScanner();
+            }
+        }
+
+        /* --- Scanner Logic --- */
+        function startCameraScanner() {
+            if (scannerActive) return;
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("scanner-reader");
+            }
+            scannerActive = true;
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 220, height: 220 },
+                    aspectRatio: 1.0
+                },
+                onScanSuccess,
+                () => {} // ignore scan failures (no match yet)
+            ).catch(err => {
+                scannerActive = false;
+                console.warn("Camera start failed:", err);
+                document.getElementById("scanner-reader").innerHTML =
+                    '<p style="color:var(--text-secondary);text-align:center;padding:40px 20px;">Could not access camera.<br>Try uploading an image instead.</p>';
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode && scannerActive) {
+                html5QrCode.stop().then(() => {
+                    scannerActive = false;
+                }).catch(() => {
+                    scannerActive = false;
+                });
+            }
+        }
+
+        function switchScanMode(mode) {
+            document.querySelectorAll('.scan-mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.scan-mode-btn[data-mode="${mode}"]`).classList.add('active');
+
+            const camEl = document.getElementById('camera-scanner');
+            const upEl = document.getElementById('upload-scanner');
+
+            if (mode === 'camera') {
+                camEl.style.display = 'flex';
+                upEl.style.display = 'none';
+                startCameraScanner();
+            } else {
+                camEl.style.display = 'none';
+                upEl.style.display = 'flex';
+                stopScanner();
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            // Stop camera after successful scan
+            stopScanner();
+            showScanResult(decodedText);
+        }
+
+        function showScanResult(text) {
+            const resultEl = document.getElementById('scanResult');
+            const resultText = document.getElementById('scanResultText');
+            const openBtn = document.getElementById('openLinkBtn');
+
+            resultText.textContent = text;
+            resultEl.classList.add('has-result');
+
+            // Show "Open Link" button if result looks like a URL
+            try {
+                new URL(text);
+                openBtn.style.display = 'inline-block';
+            } catch {
+                // Also check for common URL-like patterns without protocol
+                if (/^(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(text)) {
+                    openBtn.style.display = 'inline-block';
+                } else {
+                    openBtn.style.display = 'none';
+                }
+            }
+        }
+
+        function copyScanResult() {
+            const text = document.getElementById('scanResultText').textContent;
+            navigator.clipboard.writeText(text);
+            const btn = event.target;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 1500);
+        }
+
+        function openScanResult() {
+            let url = document.getElementById('scanResultText').textContent;
+            if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+            window.open(url, '_blank', 'noopener');
+        }
+
+        /* --- Image Upload Scanning --- */
+        document.getElementById('scanFileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const scanQr = new Html5Qrcode("upload-scanner");
+            scanQr.scanFile(file, true)
+                .then(decodedText => {
+                    showScanResult(decodedText);
+                    scanQr.clear();
+                })
+                .catch(err => {
+                    showScanResult('No barcode or QR code found in image.');
+                    document.getElementById('openLinkBtn').style.display = 'none';
+                    scanQr.clear();
+                });
+
+            // Reset file input so same file can be re-uploaded
+            e.target.value = '';
+        });
     </script>
 </body>
 </html>
